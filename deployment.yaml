@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: petclinic-container1
-        image: gcr.io/murthylab/petclinic:v1
+        image: gcr.io/raakilabs/petclinic:v1
         ports:
         - containerPort: 8080
         
