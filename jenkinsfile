@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    environment {
+    SVC_ACCOUNT_KEY = credentials('gcloud-creds')
+  }
+     
+    stages {
+              stage ('checkout'){
+            steps {
+                git branch: 'main', url: 'https://github.com/kalkirs/gcp-devops.git'
+            }
+        }
+		stage('Set creds') {
+            steps {
+              
+                sh 'echo $SVC_ACCOUNT_KEY | base64 -d > ./google-compute-engine/jenkins.json'
+		            sh 'pwd'
+		    sh 'cd google-compute-engine'
+                       
+               
+            }
+        }
+	
+	stage('Auth-Project') {
+	 steps {
+		 dir('google-compute-engine')
+	{
+        sh 'ls -ltr'
+	sh 'pwd'
+        sh 'gcloud auth activate-service-account jenkins@murthylab.iam.gserviceaccount.com --key-file=jenkins.json'
+    }
+    }
+	}
+ 	 
+	stage('Create GKE cluster') {
+	 steps {
+    
+        sh 'gcloud container clusters create gke-cluster --zone europe-central2-a --num-nodes=1 --project murthylab'
+    }
+    }
+    
+    stage('Get creds from GKE cluster') {
+	 steps {
+    
+        sh 'gcloud container clusters get-credentials gke-cluster --zone europe-central2-a --project murthylab'
+    }
+    }
+    
+    stage('App Deploy') {
+	 steps {
+	 dir('google-compute-engine')
+			 {
+        /* Below command specifies exactly like the command line */
+    
+        sh 'kubectl apply -f deployment.yaml'
+	sh 'sleep 60s'
+	
+    }
+    }
+    }
+    
+    stage('App health check') {
+	 steps {
+    
+        sh 'curl http://34.116.220.90:8080/health'        
+    }
+    }
+}
+}
