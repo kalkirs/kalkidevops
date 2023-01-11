@@ -8,13 +8,13 @@ pipeline {
     stages {
               stage ('checkout'){
             steps {
-                git branch: 'main', url: 'https://github.com/kalkirs/gcp-devops.git'
+                git branch: 'main', url: 'https://github.com/kalkirs/kalkidevops.git'
             }
         }
 		stage('Set creds') {
             steps {
               
-                sh 'echo $SVC_ACCOUNT_KEY | base64 -d > ./google-compute-engine/jenkins.json'
+                sh 'echo $SVC_ACCOUNT_KEY | base64 -d > ./kalkidevops/jenkins.json'
 		            sh 'pwd'
 		    sh 'cd google-compute-engine'
                        
@@ -24,32 +24,26 @@ pipeline {
 	
 	stage('Auth-Project') {
 	 steps {
-		 dir('google-compute-engine')
+		 dir('kalkidevops')
 	{
         sh 'ls -ltr'
 	sh 'pwd'
-        sh 'gcloud auth activate-service-account jenkins@murthylab.iam.gserviceaccount.com --key-file=jenkins.json'
+        sh 'gcloud auth activate-service-account jenkins@raakilabs.iam.gserviceaccount.com --key-file=jenkins.json'
     }
     }
 	}
  	 
-	stage('Create GKE cluster') {
-	 steps {
-    
-        sh 'gcloud container clusters create gke-cluster --zone europe-central2-a --num-nodes=1 --project murthylab'
-    }
-    }
     
     stage('Get creds from GKE cluster') {
 	 steps {
     
-        sh 'gcloud container clusters get-credentials gke-cluster --zone europe-central2-a --project murthylab'
+        sh 'gcloud container clusters get-credentials gke-cluster --region us-central1 --project raakilabs'
     }
     }
     
     stage('App Deploy') {
 	 steps {
-	 dir('google-compute-engine')
+	 dir('kalkidevops')
 			 {
         /* Below command specifies exactly like the command line */
     
@@ -60,11 +54,5 @@ pipeline {
     }
     }
     
-    stage('App health check') {
-	 steps {
-    
-        sh 'curl http://34.116.220.90:8080/health'        
-    }
-    }
 }
 }
